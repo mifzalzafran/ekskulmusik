@@ -148,8 +148,12 @@ class UserController extends Controller
         try {
             Gate::authorize('update', $user);
 
-            if ($user->isAdmin() && $request->input('role') === UserRole::Member->value) {
-                Gate::authorize('demote', $user);
+            if ($request->filled('role') && $request->input('role') !== ($user->role instanceof UserRole ? $user->role->value : $user->role)) {
+                Gate::authorize('changeRole', [$user, $request->input('role')]);
+            }
+
+            if ($request->has('is_active') && ! $request->boolean('is_active') && $user->is_active) {
+                Gate::authorize('deactivate', $user);
             }
         } catch (AuthorizationException $e) {
             return back()->with('error', $e->getMessage())->withErrors(['error' => $e->getMessage()]);
@@ -203,7 +207,11 @@ class UserController extends Controller
      */
     public function toggleChoir(User $user): RedirectResponse
     {
-        Gate::authorize('toggleChoir', $user);
+        try {
+            Gate::authorize('toggleChoir', $user);
+        } catch (AuthorizationException $e) {
+            return back()->with('error', $e->getMessage())->withErrors(['error' => $e->getMessage()]);
+        }
 
         $user->update(['is_choir' => ! $user->is_choir]);
 
@@ -217,7 +225,11 @@ class UserController extends Controller
      */
     public function restore(User $user): RedirectResponse
     {
-        Gate::authorize('restore', $user);
+        try {
+            Gate::authorize('restore', $user);
+        } catch (AuthorizationException $e) {
+            return back()->with('error', $e->getMessage())->withErrors(['error' => $e->getMessage()]);
+        }
 
         $user->restore();
 

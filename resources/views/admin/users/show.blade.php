@@ -5,8 +5,10 @@
     <h1>User Details</h1>
 
     <p>
-        <a href="{{ route('admin.users.index') }}">&larr; Back to Users List</a> |
-        <a href="{{ route('admin.users.edit', $user) }}">Edit User</a>
+        <a href="{{ route('admin.users.index') }}">&larr; Back to Users List</a>
+        @if (! $user->trashed())
+            | <a href="{{ route('admin.users.edit', $user) }}">Edit User</a>
+        @endif
     </p>
 
     <table border="1" cellpadding="6" cellspacing="0">
@@ -108,24 +110,6 @@
 
     <h2>Actions</h2>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <a href="{{ route('admin.users.edit', $user) }}">Edit</a>
-
-        <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('PATCH')
-            <button type="submit">
-                {{ $user->is_active ? 'Deactivate Account' : 'Activate Account' }}
-            </button>
-        </form>
-
-        <form action="{{ route('admin.users.toggle-choir', $user) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('PATCH')
-            <button type="submit">
-                {{ $user->is_choir ? 'Remove from Choir' : 'Assign to Choir' }}
-            </button>
-        </form>
-
         @if ($user->trashed())
             <form action="{{ route('admin.users.restore', $user) }}" method="POST" style="display:inline;">
                 @csrf
@@ -133,11 +117,33 @@
                 <button type="submit">Restore User</button>
             </form>
         @else
-            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+            <a href="{{ route('admin.users.edit', $user) }}">Edit</a>
+
+            @if (auth()->id() !== $user->id)
+                <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" style="display:inline;">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit">
+                        {{ $user->is_active ? 'Deactivate Account' : 'Activate Account' }}
+                    </button>
+                </form>
+            @endif
+
+            <form action="{{ route('admin.users.toggle-choir', $user) }}" method="POST" style="display:inline;">
                 @csrf
-                @method('DELETE')
-                <button type="submit" style="color: red;">Delete User</button>
+                @method('PATCH')
+                <button type="submit">
+                    {{ $user->is_choir ? 'Remove from Choir' : 'Assign to Choir' }}
+                </button>
             </form>
+
+            @if (auth()->id() !== $user->id)
+                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" style="color: red;">Delete User</button>
+                </form>
+            @endif
         @endif
     </div>
 @endsection

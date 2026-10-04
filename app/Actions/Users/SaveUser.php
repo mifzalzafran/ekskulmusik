@@ -19,6 +19,10 @@ class SaveUser
      */
     public function execute(array $data, ?User $user = null): User
     {
+        if ($user && $user->exists && $user->trashed()) {
+            throw new \InvalidArgumentException('Tidak dapat mengubah pengguna yang telah dihapus.');
+        }
+
         return DB::transaction(function () use ($data, $user) {
             $user ??= new User();
 

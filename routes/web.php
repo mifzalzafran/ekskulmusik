@@ -66,9 +66,9 @@ Route::middleware(['auth', 'auth.session', 'active', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
-        Route::patch('users/{user}/toggle-choir', [UserController::class, 'toggleChoir'])->name('users.toggle-choir');
+        Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active')->withTrashed();
+        Route::patch('users/{user}/toggle-choir', [UserController::class, 'toggleChoir'])->name('users.toggle-choir')->withTrashed();
         Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->withTrashed(['show', 'edit', 'update', 'destroy']);
     });
 

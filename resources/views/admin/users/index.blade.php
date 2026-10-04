@@ -144,24 +144,6 @@
                             <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
                                 <a href="{{ route('admin.users.show', $user) }}">Show</a>
 
-                                <a href="{{ route('admin.users.edit', $user) }}">Edit</a>
-
-                                <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="Toggle active status">
-                                        {{ $user->is_active ? 'Deactivate' : 'Activate' }}
-                                    </button>
-                                </form>
-
-                                <form action="{{ route('admin.users.toggle-choir', $user) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="Toggle choir membership">
-                                        {{ $user->is_choir ? 'Leave Choir' : 'Join Choir' }}
-                                    </button>
-                                </form>
-
                                 @if ($user->trashed())
                                     <form action="{{ route('admin.users.restore', $user) }}" method="POST" style="display:inline;">
                                         @csrf
@@ -171,13 +153,35 @@
                                         </button>
                                     </form>
                                 @else
-                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <a href="{{ route('admin.users.edit', $user) }}">Edit</a>
+
+                                    @if (auth()->id() !== $user->id)
+                                        <form action="{{ route('admin.users.toggle-active', $user) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" title="Toggle active status">
+                                                {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    <form action="{{ route('admin.users.toggle-choir', $user) }}" method="POST" style="display:inline;">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" style="color: red;" title="Soft delete user">
-                                            Delete
+                                        @method('PATCH')
+                                        <button type="submit" title="Toggle choir membership">
+                                            {{ $user->is_choir ? 'Leave Choir' : 'Join Choir' }}
                                         </button>
                                     </form>
+
+                                    @if (auth()->id() !== $user->id)
+                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" style="color: red;" title="Soft delete user">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>
