@@ -88,7 +88,10 @@ class SaveUser
                     $skill = $roleData['skill_level'] ?? null;
                     if ($skill instanceof SkillLevel) {
                         $skill = $skill->value;
+                    } elseif (blank($skill)) {
+                        $skill = null;
                     }
+
                     $syncData[$roleId] = [
                         'is_primary' => (bool) ($roleData['is_primary'] ?? false),
                         'skill_level' => $skill,
@@ -99,13 +102,19 @@ class SaveUser
         } elseif (array_key_exists('music_role_ids', $data)) {
             $roleIds = is_array($data['music_role_ids']) ? $data['music_role_ids'] : [];
             $primaryId = $data['primary_music_role_id'] ?? $data['primary_role_id'] ?? null;
+            if (is_array($primaryId)) {
+                $primaryId = reset($primaryId);
+            }
             $skillLevels = is_array($data['skill_levels'] ?? null) ? $data['skill_levels'] : [];
 
             foreach ($roleIds as $roleId) {
                 $skill = $skillLevels[$roleId] ?? null;
                 if ($skill instanceof SkillLevel) {
                     $skill = $skill->value;
+                } elseif (blank($skill)) {
+                    $skill = null;
                 }
+
                 $syncData[$roleId] = [
                     'is_primary' => filled($primaryId) && ((int) $roleId === (int) $primaryId),
                     'skill_level' => $skill,

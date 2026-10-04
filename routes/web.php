@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
@@ -59,3 +60,15 @@ Route::middleware(['auth', 'auth.session', 'active'])->group(function () {
         ->middleware('role:member')
         ->name('member.dashboard');
 });
+
+// Admin management routes (middleware order: auth, auth.session, active, role:admin)
+Route::middleware(['auth', 'auth.session', 'active', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::patch('users/{user}/toggle-choir', [UserController::class, 'toggleChoir'])->name('users.toggle-choir');
+        Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
+        Route::resource('users', UserController::class);
+    });
+

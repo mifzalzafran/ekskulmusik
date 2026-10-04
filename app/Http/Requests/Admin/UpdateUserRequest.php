@@ -8,6 +8,7 @@ use App\Models\MusicRole;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\Validator;
 
 class UpdateUserRequest extends FormRequest
@@ -69,11 +70,18 @@ class UpdateUserRequest extends FormRequest
             'is_choir' => ['boolean'],
             'is_active' => ['boolean'],
             'joined_at' => ['nullable', 'date'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => [
+                'nullable',
+                'string',
+                Password::min(8)->letters()->numbers(),
+            ],
 
             // Music roles / talents
             'music_role_ids' => ['nullable', 'array'],
-            'music_role_ids.*' => ['integer', 'exists:music_roles,id'],
+            'music_role_ids.*' => [
+                'integer',
+                Rule::exists('music_roles', 'id')->where('is_active', true),
+            ],
 
             'primary_music_role_id' => ['nullable'],
             'primary_music_role_ids' => ['nullable', 'array'],
@@ -84,7 +92,11 @@ class UpdateUserRequest extends FormRequest
             'skill_levels.*' => ['nullable', Rule::enum(SkillLevel::class)],
 
             'music_roles' => ['nullable', 'array'],
-            'music_roles.*.id' => ['required_with:music_roles', 'integer', 'exists:music_roles,id'],
+            'music_roles.*.id' => [
+                'required_with:music_roles',
+                'integer',
+                Rule::exists('music_roles', 'id')->where('is_active', true),
+            ],
             'music_roles.*.is_primary' => ['nullable', 'boolean'],
             'music_roles.*.skill_level' => ['nullable', Rule::enum(SkillLevel::class)],
         ];
@@ -112,7 +124,7 @@ class UpdateUserRequest extends FormRequest
             $primaryCount += count($primaryInput);
         } elseif (filled($primaryInput)) {
             $primaryCount++;
-            if (! is_numeric($primaryInput) || ! MusicRole::where('id', $primaryInput)->exists()) {
+            if (! is_numeric($primaryInput) || ! MusicRole::where('id', $primaryInput)->where('is_active', true)->exists()) {
                 $validator->errors()->add('primary_music_role_id', 'The selected primary talent is invalid.');
             }
         }
@@ -125,6 +137,11 @@ class UpdateUserRequest extends FormRequest
         $primaryRoleInput = $this->input('primary_role_id');
         if (is_array($primaryRoleInput)) {
             $primaryCount += count($primaryRoleInput);
+        } elseif (filled($primaryRoleInput)) {
+            $primaryCount++;
+            if (! is_numeric($primaryRoleInput) || ! MusicRole::where('id', $primaryRoleInput)->where('is_active', true)->exists()) {
+                $validator->errors()->add('primary_role_id', 'The selected primary talent is invalid.');
+            }
         }
 
         $primaryRoleIds = $this->input('primary_role_ids');
@@ -146,8 +163,12 @@ class UpdateUserRequest extends FormRequest
         }
 
         $roleIds = $this->input('music_role_ids');
-        if (is_array($roleIds) && ! empty($roleIds) && ! is_array($primaryInput) && filled($primaryInput)) {
-            if (! in_array($primaryInput, $roleIds)) {
+        $effectivePrimary = filled($primaryInput) && ! is_array($primaryInput)
+            ? $primaryInput
+            : (filled($primaryRoleInput) && ! is_array($primaryRoleInput) ? $primaryRoleInput : null);
+
+        if (filled($effectivePrimary)) {
+            if (! is_array($roleIds) || empty($roleIds) || ! in_array((int) $effectivePrimary, array_map('intval', $roleIds))) {
                 $validator->errors()->add('primary_music_role_id', 'The selected primary talent must be one of the assigned talents.');
             }
         }

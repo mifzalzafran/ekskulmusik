@@ -13,6 +13,7 @@
                 <span>Logged in as: <strong>{{ auth()->user()->name }}</strong> ({{ auth()->user()->role->label() }})</span>
                 @if (auth()->user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}">Admin Dashboard</a>
+                    <a href="{{ route('admin.users.index') }}">Users</a>
                 @elseif (auth()->user()->isMember())
                     <a href="{{ route('member.dashboard') }}">Member Dashboard</a>
                 @endif
@@ -32,6 +33,18 @@
         @if (session('status'))
             <div style="color: green;">
                 {{ session('status') }}
+            </div>
+        @endif
+
+        @if (session('success'))
+            <div style="color: green;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div style="color: red;">
+                {{ session('error') }}
             </div>
         @endif
 
