@@ -2,17 +2,21 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
-     * Root url redirects unauthenticated users to login.
+     * Root url renders the public landing page.
      */
-    public function test_the_application_redirects_guests_to_login(): void
+    public function test_the_application_renders_landing_page(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('login'));
+        $response->assertStatus(200);
+        $response->assertSee('Harmoni');
     }
 }

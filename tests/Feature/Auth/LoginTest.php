@@ -206,11 +206,12 @@ class LoginTest extends TestCase
         $response->assertRedirect(route('member.dashboard'));
     }
 
-    public function test_root_url_redirects_guest_to_login(): void
+    public function test_root_url_renders_landing_page_for_guests(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('login'));
+        $response->assertStatus(200);
+        $response->assertSee('Harmoni');
     }
 
     public function test_root_url_redirects_admin_to_admin_dashboard(): void

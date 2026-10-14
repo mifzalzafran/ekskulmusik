@@ -2,11 +2,17 @@
 
 use App\Http\Controllers\Admin\AttendanceSessionController as AdminAttendanceSessionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\StudioBookingController as AdminStudioBookingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Member\AttendanceController as MemberAttendanceController;
 use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
+use App\Http\Controllers\Member\InstrumentController as MemberInstrumentController;
+use App\Models\Event;
+use App\Models\Instrument;
+use App\Models\StudioRoom;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,23 +23,27 @@ use Illuminate\Support\Facades\Route;
 |
 | School Music Extracurricular Management Application.
 |
-| Out of Scope (TODOs):
-| TODO: Public registration is closed for now; students are registered by staff.
-| TODO: Forgot / reset password functionality.
-| TODO: Email verification workflow.
-|
 */
 
-// Root route: redirects guests to login, and authenticated users to their dashboard by role
+// Root route: Shows public landing page for guests, redirects authenticated users to their dashboard
 Route::get('/', function (Request $request) {
-    if (! $request->user()) {
-        return redirect()->route('login');
+    if ($request->user()) {
+        return $request->user()->isAdmin()
+            ? redirect()->route('admin.dashboard')
+            : redirect()->route('member.dashboard');
     }
 
-    return $request->user()->isAdmin()
-        ? redirect()->route('admin.dashboard')
-        : redirect()->route('member.dashboard');
-});
+    $upcomingEvents = Event::upcoming()->take(3)->get();
+    $studioRooms = StudioRoom::active()->get();
+    $stats = [
+        'members_count' => User::members()->active()->count(),
+        'choir_count' => User::members()->active()->choir()->count(),
+        'instruments_count' => Instrument::count(),
+        'studio_rooms_count' => StudioRoom::active()->count(),
+    ];
+
+    return view('welcome', compact('upcomingEvents', 'studioRooms', 'stats'));
+})->name('home');
 
 // Guest-only authentication routes
 Route::middleware('guest')->group(function () {
@@ -66,6 +76,11 @@ Route::middleware(['auth', 'auth.session', 'active'])->group(function () {
     Route::get('/member/attendance', [MemberAttendanceController::class, 'index'])
         ->middleware('role:member')
         ->name('member.attendance');
+
+    // Member deposited instrument take-home toggle
+    Route::patch('/member/instruments/{instrument}/toggle-take-home', [MemberInstrumentController::class, 'toggleTakeHome'])
+        ->middleware('role:member')
+        ->name('member.instruments.toggle-take-home');
 });
 
 // Admin management routes (middleware order: auth, auth.session, active, role:admin)
@@ -77,6 +92,9 @@ Route::middleware(['auth', 'auth.session', 'active', 'role:admin'])
         Route::patch('users/{user}/toggle-choir', [UserController::class, 'toggleChoir'])->name('users.toggle-choir')->withTrashed();
         Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
         Route::resource('users', UserController::class)->withTrashed(['show', 'edit', 'update', 'destroy']);
+
+        // Studio booking management status update
+        Route::patch('studio-bookings/{booking}/status', [AdminStudioBookingController::class, 'updateStatus'])->name('studio-bookings.status');
 
         // Attendance sessions management
         Route::patch('attendance-sessions/{session}/toggle-open', [AdminAttendanceSessionController::class, 'toggleOpen'])->name('attendance-sessions.toggle-open');

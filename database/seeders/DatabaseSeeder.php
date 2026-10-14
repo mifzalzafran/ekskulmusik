@@ -15,6 +15,10 @@ class DatabaseSeeder extends Seeder
             MusicRoleSeeder::class,
             UserSeeder::class,
             AttendanceSeeder::class,
+            StudioSeeder::class,
+            InstrumentSeeder::class,
+            CashSeeder::class,
+            EventSeeder::class,
         ]);
     }
 }

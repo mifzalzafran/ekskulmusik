@@ -80,6 +80,48 @@ class User extends Authenticatable
     }
 
     /**
+     * Studio bookings made by this user.
+     */
+    public function studioBookings(): HasMany
+    {
+        return $this->hasMany(StudioBooking::class);
+    }
+
+    /**
+     * Instruments owned and deposited by this student.
+     */
+    public function ownedInstruments(): HasMany
+    {
+        return $this->hasMany(Instrument::class, 'owner_user_id');
+    }
+
+    /**
+     * Instrument loan records where this user is the borrower.
+     */
+    public function instrumentLoans(): HasMany
+    {
+        return $this->hasMany(InstrumentLoan::class, 'borrower_user_id');
+    }
+
+    /**
+     * Cash transaction records related to this user (e.g. dues paid).
+     */
+    public function cashTransactions(): HasMany
+    {
+        return $this->hasMany(CashTransaction::class);
+    }
+
+    /**
+     * Events where this user is a participant.
+     */
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_participants')
+            ->withPivot('role_in_event', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
      * Determine if the user is an admin.
      */
     public function isAdmin(): bool
