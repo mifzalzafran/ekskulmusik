@@ -14,8 +14,10 @@
                 @if (auth()->user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}">Admin Dashboard</a>
                     <a href="{{ route('admin.users.index') }}">Users</a>
+                    <a href="{{ route('admin.attendance-sessions.index') }}">Presensi Latihan</a>
                 @elseif (auth()->user()->isMember())
                     <a href="{{ route('member.dashboard') }}">Member Dashboard</a>
+                    <a href="{{ route('member.attendance') }}">Presensi Saya</a>
                 @endif
                 <a href="{{ route('password.edit') }}">Change Password</a>
                 <form action="{{ route('logout') }}" method="POST" style="display:inline;">

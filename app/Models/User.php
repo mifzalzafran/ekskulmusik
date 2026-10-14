@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -68,6 +69,14 @@ class User extends Authenticatable
         return $this->belongsToMany(MusicRole::class)
             ->withPivot('is_primary', 'skill_level')
             ->withTimestamps();
+    }
+
+    /**
+     * Attendance records for this user.
+     */
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
     }
 
     /**

@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AttendanceSessionController as AdminAttendanceSessionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Member\AttendanceController as MemberAttendanceController;
 use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +61,11 @@ Route::middleware(['auth', 'auth.session', 'active'])->group(function () {
     Route::get('/member/dashboard', MemberDashboardController::class)
         ->middleware('role:member')
         ->name('member.dashboard');
+
+    // Member attendance & schedule
+    Route::get('/member/attendance', [MemberAttendanceController::class, 'index'])
+        ->middleware('role:member')
+        ->name('member.attendance');
 });
 
 // Admin management routes (middleware order: auth, auth.session, active, role:admin)
@@ -70,5 +77,12 @@ Route::middleware(['auth', 'auth.session', 'active', 'role:admin'])
         Route::patch('users/{user}/toggle-choir', [UserController::class, 'toggleChoir'])->name('users.toggle-choir')->withTrashed();
         Route::patch('users/{user}/restore', [UserController::class, 'restore'])->name('users.restore')->withTrashed();
         Route::resource('users', UserController::class)->withTrashed(['show', 'edit', 'update', 'destroy']);
+
+        // Attendance sessions management
+        Route::patch('attendance-sessions/{session}/toggle-open', [AdminAttendanceSessionController::class, 'toggleOpen'])->name('attendance-sessions.toggle-open');
+        Route::post('attendance-sessions/{session}/record', [AdminAttendanceSessionController::class, 'recordAttendance'])->name('attendance-sessions.record');
+        Route::resource('attendance-sessions', AdminAttendanceSessionController::class)->parameters([
+            'attendance-sessions' => 'session',
+        ]);
     });
 
